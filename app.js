@@ -1,15 +1,27 @@
 const form = document.querySelector('#form');
 const fileName = document.querySelector('#filename');
 const fileInput = document.getElementById('chooseFile');
-const URL = 'https://api.jwplayer.com/v2/sites/CivsmZGh/media/';
 
 form.addEventListener('submit', createMedia);
 
 const resp = [];
 
+function uploadParts(){
+    let URL = `https://api.jwplayer.com/v2/uploads/${resp[0].upload_id}/parts?page=1&page_length=50`;
+    fetch(URL, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': resp[0].upload_token
+        }
+    })
+    .then(response => response.json())
+    .then(response => console.log(response))
+}
 
 function createMedia(e){
     e.preventDefault();
+    let URL = 'https://api.jwplayer.com/v2/sites/CivsmZGh/media/';
     fetch(URL, {
         method: "POST",
         headers: {
@@ -19,15 +31,15 @@ function createMedia(e){
         },
         body: JSON.stringify({
             upload: {
-            'method': 'multipart',
-            'mime_type': 'video/mp4',
+                'method': 'multipart',
+                'mime_type': 'video/mp4',
             },
-        metadata: {
-            'title': fileName.value,
-            'description': 'uploading using APIv2',
-            'category': 'Careers',
-            'language': 'en'
-        }
+            metadata: {
+                'title': fileName.value,
+                'description': 'uploading using APIv2',
+                'category': 'Careers',
+                'language': 'en'
+            }
         })
     })
     .then(response => response.json())
@@ -38,6 +50,8 @@ function createMedia(e){
             "upload_id": id,
             "upload_token": token
         });
-        console.log(resp)
     });
+    setTimeout(function(){
+        uploadParts();
+    }, 1000);
 }
