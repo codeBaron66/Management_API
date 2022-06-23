@@ -27,7 +27,7 @@ function createMedia(e){
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': 'gG_69lS7o52T-G8dc-Y4tmInVlVKbWQybHBNbEZUZG5OdFJ6aExjbnB6Vm5kak0xbHIn'
+            'Authorization': 'gG_69lS7o52T-G8dc-Y4tmInVlVKbVm5kak0xbHIn'
         },
         body: JSON.stringify({
             upload: {
