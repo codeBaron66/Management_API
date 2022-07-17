@@ -1,7 +1,7 @@
 const form = document.querySelector('#form');
 const fileName = document.querySelector('#filename');
 const fileInput = document.getElementById('chooseFile');
-const URL = 'https://api.jwplayer.com/v2/sites/CivsmZGh/media/';
+const URL = 'https://api.jwplayer.com/v2/sites/site_id/media/';
 
 form.addEventListener('submit', createMedia);
 
