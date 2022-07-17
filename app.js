@@ -21,13 +21,13 @@ function uploadParts(){
 
 function createMedia(e){
     e.preventDefault();
-    let URL = 'https://api.jwplayer.com/v2/sites/CivsmZGh/media/';
+    let URL = 'https://api.jwplayer.com/v2/sites/site_id/media/';
     fetch(URL, {
         method: "POST",
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': 'gG_69lS7o52T-G8dc-Y4tmInVlVKybHbEZUZG5OdFJ6aExjbnB6Vm5kak0xbHIn'
+            'Authorization': 'API_KEY'
         },
         body: JSON.stringify({
             upload: {
@@ -78,13 +78,13 @@ function uploadMedia(){
 
 function createMedia(e){
     e.preventDefault();
-    let URL = 'https://api.jwplayer.com/v2/sites/CivsmZGh/media/';
+    let URL = 'https://api.jwplayer.com/v2/sites/site_id/media/';
     fetch(URL, {
         method: "POST",
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': 'gG_69lS7o52T-G8dc-Y4tmInVlVKbWQybHBNbEZUZG5OdFJ6aExjbnB6Vm5kak0xbHIn'
+            'Authorization': 'API_KEY'
         },
         body: JSON.stringify({
             upload: {
