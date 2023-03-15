@@ -1,108 +1,137 @@
 const form = document.querySelector('#form');
-const fileName = document.querySelector('#filename');
-const fileInput = document.getElementById('chooseFile');
+const siteId = document.querySelector('#siteId');
+const v2key = document.querySelector('#key');
+const file = document.querySelector('#file');
 
-form.addEventListener('submit', createMedia);
+form.addEventListener('submit', getFormData);
 
-const resp = [];
-
-function uploadParts(){
-    let URL = `https://api.jwplayer.com/v2/uploads/${resp[0].upload_id}/parts?page=1&page_length=50`;
-    fetch(URL, {
-        method: "GET",
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': resp[0].upload_token
-        }
-    })
-    .then(response => response.json())
-    .then(response => console.log(response))
+function getFormData(e) {
+    console.log("getFormData() Executed");
+    e.preventDefault();
+    const key = v2key.value;
+    const propertyID = siteId.value;
+    filePath = file.value;
+    fileSize = document.querySelector('input[type="file"]').files[0].size;
+    console.log("Key: " + key);
+    console.log("Property Id: " + propertyID);
+    console.log("File path: " + filePath);
+    console.log("File size: " + fileSize + " bytes");
+    createMedia(key, propertyID)
 }
 
-function createMedia(e){
-    e.preventDefault();
-    let URL = 'https://api.jwplayer.com/v2/sites/site_id/media/';
-    fetch(URL, {
-        method: "POST",
+function createMedia(key, id) {
+    console.log("CreateMedia() Executed");
+    const options = {
+        method: 'POST',
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'API_KEY'
+            'accept': 'application/json',
+            'content-type': 'application/json', 
+            'Authorization': key
         },
         body: JSON.stringify({
-            upload: {
-                'method': 'multipart',
-                'mime_type': 'video/mp4',
-            },
-            metadata: {
-                'title': fileName.value,
-                'description': 'uploading using APIv2',
-                'category': 'Careers',
-                'language': 'en'
-            }
-        })
-    })
+            'upload': {method: 'multipart'},
+            'metadata': {title: 'Multipart Upload via API JS'}
+        }),
+        upload: {
+            "mime_type": "video/mp4"
+          }
+    };
+    fetch(`https://api.jwplayer.com/v2/sites/${id}/media/`, options)
     .then(response => response.json())
-    .then(function(res){
-        let id = res["upload_id"];
-        let token = res["upload_token"]
-        resp.push({
-            "upload_id": id,
-            "upload_token": token
+    .then(response => getPartURLs(response))
+    .catch(err => console.error(err));
+}
+
+function getPartURLs(response) {
+    console.log("getPartURLs() Executed");
+    getPartsCount();
+    upload_token = response.upload_token
+    upload_id = response.upload_id
+    let uploadURL = `https://api.jwplayer.com/v2/uploads/${upload_id}/parts?page=1&page_length=${parts}`
+    console.log("Upload URL: " + uploadURL);
+    const options = {
+        method: 'GET', 
+        headers: {
+            accept: 'application/json',
+            Authorization: upload_token
+        }
+    };
+    fetch(uploadURL, options)
+    .then(response => response.json())
+    .then(response => uploadParts(response))
+    .catch(err => console.error(err));
+}
+
+function uploadParts(response){
+    console.log("uploadParts() Executed");
+    createChunks(document.querySelector('input[type="file"]').files[0], Math.floor(fileSize / parts)); 
+    console.log(response.parts);
+    console.log(chunks);
+    let responseParts = response.parts;
+    let i = 0;
+    responseParts.forEach((element) => {
+        let url = element.upload_link;
+        console.log(url);
+        let data = chunks[i];
+        console.log("chunks index: " + i);
+        const options = {
+            method: 'PUT',
+            upload: {
+                "mime_type": "video/mp4"
+            },
+            data: {
+                "data": data
+            }
+        }
+        fetch(url, options)
+        .catch(err => console.error(err));
+        i++;
         });
-    });
-    setTimeout(function(){
-        uploadParts();
-    }, 1000);
-}
+        setTimeout(() => {
+            completeUpload();
+        }, 10000);
+    }
 
-
-// DIRECT UPLOAD
-const form = document.querySelector('#form');
-const fileName = document.querySelector('#filename');
-const fileInput = document.getElementById('chooseFile');
-
-form.addEventListener('submit', createMedia);
-const resp = [];
-
-function uploadMedia(){
-    fetch(resp[0], {
-        method: "PUT",
+function completeUpload(){
+    const options = {
+        method: 'PUT', 
         headers: {
-            'Content-Type': 'video/mp4',
-        }
-    })
+            accept: 'application/json',
+            Authorization: upload_token
+        }};
+    fetch(`https://api.jwplayer.com/v2/uploads/${upload_id}/complete/`, options)
     .then(response => response.json())
     .then(response => console.log(response))
+    .catch(err => console.error(err));
 }
 
-function createMedia(e){
-    e.preventDefault();
-    let URL = 'https://api.jwplayer.com/v2/sites/site_id/media/';
-    fetch(URL, {
-        method: "POST",
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'API_KEY'
-        },
-        body: JSON.stringify({
-            upload: {
-                'method': 'direct',
-                'mime_type': 'video/mp4',
-            },
-            metadata: {
-                'title': fileName.value,
-                'description': 'uploading using APIv2',
-                'category': 'Careers',
-                'language': 'en'
-            }
-        })
-    })
-    .then(response => response.json())
-    .then(function(res){
-        let upLink = res["upload_link"];
-        resp.push(upLink)
-        uploadMedia();
-    });
+function createChunks (file,cSize/* cSize should be bytes */) {
+    console.log("createChunks() Executed");
+    console.log(file);
+    console.log("Part size: " + cSize + " bytes");
+    let startPointer = 0;
+    let endPointer = file.size;
+    chunks = [];
+    while(startPointer<endPointer - cSize){
+        let newStartPointer = startPointer+cSize;
+        chunks.push(file.slice(startPointer,newStartPointer, "video/mp4")); 
+        startPointer = newStartPointer;
+    }
+    return chunks;
+}
+
+function getPartsCount(){
+    let minimumPartSize = 5.24288; //MB
+    let size = byteToMegabyte(fileSize);
+    console.log("File size: " + size + "MB");
+    parts = Math.ceil((size * minimumPartSize) / 100);
+    console.log("Parts: " + parts);
+}
+
+function byteToMegabyte(x){
+    let l = 0, n = parseInt(x, 10) || 0;
+    while(n >= 1024 && ++l){
+        n = n/1024;
+    }
+    return(n.toFixed(n < 10 && l > 0 ? 1 : 0));
 }
